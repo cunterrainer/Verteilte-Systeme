@@ -91,7 +91,7 @@ public class QuizServerState {
         for (ClientHandler handler : room.playerHandlersSnapshot()) {
             handler.setRoomId(null);
             handler.setReady(false);
-            handler.send("OK|ROOM_CLOSED|" + roomId);
+            handler.send("OK: ROOM_CLOSED | " + roomId);
         }
     }
 }

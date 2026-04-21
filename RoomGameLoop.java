@@ -20,7 +20,7 @@ public class RoomGameLoop implements Runnable {
         try {
             while (room.isGameStarted()) {
                 if (room.getPlayerCount() < 2) {
-                    room.broadcast("GAME_OVER|Not enough players to continue.");
+                    room.broadcast("GAME_OVER: Not enough players to continue.");
                     room.abortGame();
                     state.closeRoomAfterGame(room);
                     return;
@@ -34,11 +34,13 @@ public class RoomGameLoop implements Runnable {
                 }
 
                 room.broadcast(
-                        "ROUND_START|" + room.getCurrentRoundNumber() + "|"
-                                + ProtocolParser.safeField(question.getText()) + "|A=" + ProtocolParser.safeField(question.getOptionA())
-                                + "|B=" + ProtocolParser.safeField(question.getOptionB()) + "|C=" + ProtocolParser.safeField(question.getOptionC())
-                                + "|D=" + ProtocolParser.safeField(question.getOptionD()) + "|" + roundSeconds
-                );
+                        "ROUND_START: " + room.getCurrentRoundNumber() + " | Question: "
+                                + ProtocolParser.safeField(question.getText()) + " | A="
+                                + ProtocolParser.safeField(question.getOptionA())
+                                + " | B=" + ProtocolParser.safeField(question.getOptionB()) + " | C="
+                                + ProtocolParser.safeField(question.getOptionC())
+                                + " | D=" + ProtocolParser.safeField(question.getOptionD()) + " | Time: " + roundSeconds
+                                + "s");
 
                 long deadline = System.currentTimeMillis() + roundSeconds * 1000L;
                 while (System.currentTimeMillis() < deadline) {
@@ -53,13 +55,14 @@ public class RoomGameLoop implements Runnable {
 
                 QuizRoom.RoundOutcome outcome = room.closeRoundAndScore();
                 if (outcome != null) {
-                    room.broadcast("ROUND_RESULT|" + outcome.getCorrectOption() + "|" + outcome.getFirstCorrectUser() + "|"
+                    room.broadcast("ROUND_RESULT: " + outcome.getCorrectOption() + " | First Correct: "
+                            + outcome.getFirstCorrectUser() + " | Explanation: "
                             + ProtocolParser.safeField(outcome.getExplanation()));
-                    room.broadcast("SCOREBOARD|" + outcome.getScoreboard());
+                    room.broadcast("SCOREBOARD: " + outcome.getScoreboard());
                 }
 
                 if (!room.moveToNextQuestion()) {
-                    room.broadcast("GAME_OVER|" + room.formatScoreboard());
+                    room.broadcast("GAME_OVER: " + room.formatScoreboard());
                     room.abortGame();
                     state.closeRoomAfterGame(room);
                     return;
@@ -67,7 +70,7 @@ public class RoomGameLoop implements Runnable {
             }
         } catch (InterruptedException interruptedException) {
             Thread.currentThread().interrupt();
-            room.broadcast("ERR|GAME_LOOP_INTERRUPTED");
+            room.broadcast("ERR: GAME_LOOP_INTERRUPTED");
             room.abortGame();
             state.closeRoomAfterGame(room);
         }

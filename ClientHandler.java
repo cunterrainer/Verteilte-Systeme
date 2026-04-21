@@ -27,12 +27,12 @@ public class ClientHandler extends Thread {
         try (Socket ignored = socket) {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
-            send("OK|WELCOME|Use HELLO|<username> to start.");
+            send("OK: Welcome, use HELLO <username> to start.");
 
             String line;
             while ((line = in.readLine()) != null) {
                 if (line.trim().isEmpty()) {
-                    send("ERR|EMPTY_COMMAND");
+                    send("ERR: EMPTY_COMMAND");
                     continue;
                 }
                 ProtocolParser.Command command = ProtocolParser.parse(line);
@@ -41,7 +41,7 @@ public class ClientHandler extends Thread {
                 }
             }
         } catch (IOException ioException) {
-            send("ERR|IO_ERROR");
+            send("ERR: IO_ERROR");
         } finally {
             cleanup();
         }
@@ -73,13 +73,13 @@ public class ClientHandler extends Thread {
         if ("QUIT".equals(name)) {
             return handleQuit();
         }
-        send("ERR|UNKNOWN_COMMAND");
+        send("ERR: UNKNOWN_COMMAND");
         return false;
     }
 
     private boolean requireSession() {
         if (session == null) {
-            send("ERR|HELLO_REQUIRED");
+            send("ERR: HELLO_REQUIRED");
             return false;
         }
         return true;
@@ -87,20 +87,20 @@ public class ClientHandler extends Thread {
 
     private boolean handleHello(String[] args) {
         if (session != null) {
-            send("ERR|ALREADY_LOGGED_IN");
+            send("ERR: ALREADY_LOGGED_IN");
             return false;
         }
         if (args.length < 1 || args[0].isBlank()) {
-            send("ERR|MISSING_USERNAME");
+            send("ERR: MISSING_USERNAME");
             return false;
         }
         String username = args[0].trim();
         if (!state.registerUser(username, this)) {
-            send("ERR|USERNAME_IN_USE");
+            send("ERR: USERNAME_IN_USE");
             return false;
         }
         session = new PlayerSession(username);
-        send("OK|HELLO|" + username);
+        send("OK: Hello " + username);
         return false;
     }
 
@@ -109,7 +109,7 @@ public class ClientHandler extends Thread {
             return false;
         }
         List<String> rooms = state.listRooms();
-        send("OK|ROOMS|" + String.join(",", rooms));
+        send("OK: Rooms: " + String.join(",", rooms));
         return false;
     }
 
@@ -118,21 +118,23 @@ public class ClientHandler extends Thread {
             return false;
         }
         if (session.getRoomId() != null) {
-            send("ERR|ALREADY_IN_ROOM");
+            send("ERR: ALREADY_IN_ROOM");
             return false;
         }
         if (args.length < 1 || args[0].isBlank()) {
-            send("ERR|MISSING_ROOM_NAME");
+            send("ERR: MISSING_ROOM_NAME");
             return false;
         }
         QuizRoom room = state.createRoom(args[0], session.getUsername(), this);
         if (room == null) {
-            send("ERR|ROOM_CREATE_FAILED");
+            send("ERR: ROOM_CREATE_FAILED");
             return false;
         }
-        send("OK|ROOM_CREATED|" + room.getRoomId());
-        room.broadcast("ROOM_JOINED|" + room.getRoomId() + "|" + room.getPlayerCount());
-        room.broadcast("ROOM_UPDATE|" + room.getRoomId() + "|" + room.getPlayerCount() + "|" + room.getReadyCount());
+        send("OK: ROOM_CREATED: " + room.getRoomId());
+        room.broadcast("ROOM_JOINED: " + room.getRoomId() + " | Players: " + room.getPlayerCount());
+        room.broadcast(
+                "ROOM_UPDATE: " + room.getRoomId() + " | Players: " + room.getPlayerCount() + " | Ready: "
+                        + room.getReadyCount());
         return false;
     }
 
@@ -141,22 +143,24 @@ public class ClientHandler extends Thread {
             return false;
         }
         if (session.getRoomId() != null) {
-            send("ERR|ALREADY_IN_ROOM");
+            send("ERR: ALREADY_IN_ROOM");
             return false;
         }
         if (args.length < 1 || args[0].isBlank()) {
-            send("ERR|MISSING_ROOM_ID");
+            send("ERR: MISSING_ROOM_ID");
             return false;
         }
         String roomId = args[0];
         QuizRoom room = state.joinRoom(roomId, session.getUsername(), this);
         if (room == null) {
-            send("ERR|ROOM_JOIN_FAILED");
+            send("ERR: ROOM_JOIN_FAILED");
             return false;
         }
-        send("OK|ROOM_JOINED|" + roomId);
-        room.broadcast("ROOM_JOINED|" + room.getRoomId() + "|" + room.getPlayerCount());
-        room.broadcast("ROOM_UPDATE|" + room.getRoomId() + "|" + room.getPlayerCount() + "|" + room.getReadyCount());
+        send("OK: ROOM_JOINED: " + roomId);
+        room.broadcast("ROOM_JOINED: " + room.getRoomId() + " | Players: " + room.getPlayerCount());
+        room.broadcast(
+                "ROOM_UPDATE: " + room.getRoomId() + " | Players: " + room.getPlayerCount() + " | Ready: "
+                        + room.getReadyCount());
         return false;
     }
 
@@ -166,24 +170,26 @@ public class ClientHandler extends Thread {
         }
         String roomId = session.getRoomId();
         if (roomId == null) {
-            send("ERR|NOT_IN_ROOM");
+            send("ERR: NOT_IN_ROOM");
             return false;
         }
         QuizRoom room = state.getRoom(roomId);
         if (room == null || !room.hasPlayer(session.getUsername())) {
-            send("ERR|ROOM_NOT_FOUND");
+            send("ERR: ROOM_NOT_FOUND");
             return false;
         }
 
         if (!room.markReady(session.getUsername())) {
-            send("ERR|INVALID_STATE");
+            send("ERR: INVALID_STATE");
             return false;
         }
         session.setReady(true);
-        room.broadcast("ROOM_UPDATE|" + room.getRoomId() + "|" + room.getPlayerCount() + "|" + room.getReadyCount());
+        room.broadcast(
+                "ROOM_UPDATE: " + room.getRoomId() + " | Players: " + room.getPlayerCount() + " | Ready: "
+                        + room.getReadyCount());
 
         if (room.startGame()) {
-            room.broadcast("OK|GAME_STARTING");
+            room.broadcast("OK: GAME_STARTING");
             Thread loopThread = new Thread(new RoomGameLoop(room, state, 20), "room-loop-" + room.getRoomId());
             loopThread.start();
         }
@@ -196,37 +202,37 @@ public class ClientHandler extends Thread {
         }
         String roomId = session.getRoomId();
         if (roomId == null) {
-            send("ERR|NOT_IN_ROOM");
+            send("ERR: NOT_IN_ROOM");
             return false;
         }
         if (args.length < 1 || args[0].isBlank()) {
-            send("ERR|MISSING_ANSWER");
+            send("ERR: MISSING_ANSWER");
             return false;
         }
         QuizRoom room = state.getRoom(roomId);
         if (room == null) {
-            send("ERR|ROOM_NOT_FOUND");
+            send("ERR: ROOM_NOT_FOUND");
             return false;
         }
         QuizRoom.SubmitStatus status = room.submitAnswer(session.getUsername(), args[0].toUpperCase(Locale.ROOT));
         switch (status) {
             case ACCEPTED:
-                send("OK|ANSWER_ACCEPTED");
+                send("OK: ANSWER_ACCEPTED");
                 break;
             case INVALID_STATE:
-                send("ERR|INVALID_STATE");
+                send("ERR: INVALID_STATE");
                 break;
             case INVALID_OPTION:
-                send("ERR|INVALID_OPTION");
+                send("ERR: INVALID_OPTION");
                 break;
             case ALREADY_ANSWERED:
-                send("ERR|ALREADY_ANSWERED");
+                send("ERR: ALREADY_ANSWERED");
                 break;
             case NOT_IN_ROOM:
-                send("ERR|NOT_IN_ROOM");
+                send("ERR: NOT_IN_ROOM");
                 break;
             default:
-                send("ERR|UNKNOWN_STATE");
+                send("ERR: UNKNOWN_STATE");
                 break;
         }
         return false;
@@ -238,11 +244,13 @@ public class ClientHandler extends Thread {
         }
         QuizRoom room = state.leaveCurrentRoom(session.getUsername(), this);
         if (room == null) {
-            send("ERR|NOT_IN_ROOM");
+            send("ERR: NOT_IN_ROOM");
             return false;
         }
-        send("OK|LEFT_ROOM");
-        room.broadcast("ROOM_UPDATE|" + room.getRoomId() + "|" + room.getPlayerCount() + "|" + room.getReadyCount());
+        send("OK: LEFT_ROOM");
+        room.broadcast(
+                "ROOM_UPDATE: " + room.getRoomId() + " | Players: " + room.getPlayerCount() + " | Ready: "
+                        + room.getReadyCount());
         return false;
     }
 
