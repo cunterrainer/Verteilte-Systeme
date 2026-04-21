@@ -190,7 +190,7 @@ public class ClientHandler extends Thread {
 
         if (room.startGame()) {
             room.broadcast("OK: GAME_STARTING");
-            Thread loopThread = new Thread(new RoomGameLoop(room, state, 20), "room-loop-" + room.getRoomId());
+            Thread loopThread = new Thread(new RoomGameLoop(room, state, 30), "room-loop-" + room.getRoomId());
             loopThread.start();
         }
         return false;
