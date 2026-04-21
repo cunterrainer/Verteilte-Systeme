@@ -27,7 +27,7 @@ public class ClientHandler extends Thread {
         try (Socket ignored = socket) {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
-            send("OK: Welcome, use HELLO <username> to start.");
+            send("OK: Welcome, use HELLO <username> to start or use HELP for more information.");
 
             String line;
             while ((line = in.readLine()) != null) {
@@ -49,6 +49,9 @@ public class ClientHandler extends Thread {
 
     private boolean handleCommand(ProtocolParser.Command command) {
         String name = command.getName();
+        if ("HELP".equals(name)) {
+            return handleHelp();
+        }
         if ("HELLO".equals(name)) {
             return handleHello(command.getArgs());
         }
@@ -109,7 +112,7 @@ public class ClientHandler extends Thread {
             return false;
         }
         List<String> rooms = state.listRooms();
-        send("OK: Rooms: " + String.join(",", rooms));
+        send("OK: Rooms: " + String.join(", ", rooms));
         return false;
     }
 
@@ -261,6 +264,31 @@ public class ClientHandler extends Thread {
         }
         send("BYE");
         return true;
+    }
+
+    private boolean handleHelp() {
+        StringBuilder help = new StringBuilder();
+        help.append("Welcome to QuizArena Multiplayer Quiz Game!\n");
+        help.append("Commands:\n");
+        help.append("  HELP - Show this help message\n");
+        help.append("  HELLO <username> - Register/login with a username\n");
+        help.append("  LIST_ROOMS - List available quiz rooms\n");
+        help.append("  CREATE_ROOM <room_name> - Create a new quiz room\n");
+        help.append("  JOIN_ROOM <room_id> - Join an existing quiz room\n");
+        help.append("  READY - Mark yourself ready in the room (all players must be ready to start)\n");
+        help.append("  ANSWER <option> - Submit your answer for the current question (A, B, C, or D)\n");
+        help.append("  LEAVE - Leave your current room\n");
+        help.append("  QUIT - Disconnect from the server\n\n");
+        help.append("How to Play:\n");
+        help.append("1. Connect and use HELLO <username> to register.\n");
+        help.append("2. LIST_ROOMS to see available rooms, or CREATE_ROOM <room_name> to make one.\n");
+        help.append("3. JOIN_ROOM <room_id> to join a room.\n");
+        help.append("4. When all players are ready (READY), the game starts.\n");
+        help.append("5. For each round, use ANSWER <option> to answer.\n");
+        help.append("6. LEAVE to exit a room, QUIT to disconnect.\n\n");
+        help.append("Enjoy the quiz!\n");
+        send(help.toString());
+        return false;
     }
 
     private void cleanup() {
