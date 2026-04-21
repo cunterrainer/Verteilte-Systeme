@@ -34,13 +34,10 @@ public class RoomGameLoop implements Runnable {
                 }
 
                 room.broadcast(
-                        "ROUND_START: " + room.getCurrentRoundNumber() + " | Question: "
-                                + ProtocolParser.safeField(question.getText()) + " | A="
-                                + ProtocolParser.safeField(question.getOptionA())
-                                + " | B=" + ProtocolParser.safeField(question.getOptionB()) + " | C="
-                                + ProtocolParser.safeField(question.getOptionC())
-                                + " | D=" + ProtocolParser.safeField(question.getOptionD()) + " | Time: " + roundSeconds
-                                + "s");
+                        "ROUND_START: " + room.getCurrentRoundNumber() + " | Question: " + question.getText()
+                                + " | A=" + question.getOptionA()
+                                + " | B=" + question.getOptionB() + " | C=" + question.getOptionC()
+                                + " | D=" + question.getOptionD() + " | Time: " + roundSeconds + "s");
 
                 long deadline = System.currentTimeMillis() + roundSeconds * 1000L;
                 while (System.currentTimeMillis() < deadline) {
@@ -56,8 +53,7 @@ public class RoomGameLoop implements Runnable {
                 QuizRoom.RoundOutcome outcome = room.closeRoundAndScore();
                 if (outcome != null) {
                     room.broadcast("ROUND_RESULT: " + outcome.getCorrectOption() + " | First Correct: "
-                            + outcome.getFirstCorrectUser() + " | Explanation: "
-                            + ProtocolParser.safeField(outcome.getExplanation()));
+                            + outcome.getFirstCorrectUser() + " | Explanation: " + outcome.getExplanation());
                     room.broadcast("SCOREBOARD: " + outcome.getScoreboard());
                 }
 

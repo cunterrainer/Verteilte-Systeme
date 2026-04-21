@@ -37,8 +37,4 @@ public final class ProtocolParser {
         }
         return new Command(name, args);
     }
-
-    public static String safeField(String value) {
-        return value == null ? "" : value.replace("|", "/");
-    }
 }
