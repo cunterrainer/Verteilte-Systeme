@@ -24,7 +24,7 @@ public class ClientHandler extends Thread {
 
     @Override
     public void run() {
-        try (Socket ignored = socket) {
+        try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
             send("OK: Welcome, use HELLO <username> to start or use HELP for more information.");
@@ -44,6 +44,7 @@ public class ClientHandler extends Thread {
             send("ERR: IO_ERROR");
         } finally {
             cleanup();
+            try { socket.close(); } catch (IOException ignored) {}
         }
     }
 

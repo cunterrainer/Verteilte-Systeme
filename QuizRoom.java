@@ -118,7 +118,7 @@ public class QuizRoom {
     }
 
     public synchronized boolean canStart(int minPlayers) {
-        return !gameStarted && players.size() >= minPlayers && !players.isEmpty() && readyUsers.size() == players.size();
+        return !gameStarted && players.size() >= minPlayers && readyUsers.size() == players.size();
     }
 
     public synchronized boolean startGame() {
