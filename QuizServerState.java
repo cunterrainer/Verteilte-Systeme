@@ -1,7 +1,3 @@
-package de.othr.vs.quizarena.core;
-
-import de.othr.vs.quizarena.net.ClientHandler;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

@@ -1,5 +1,3 @@
-package de.othr.vs.quizarena.model;
-
 import java.util.Locale;
 
 public class Question {

@@ -1,7 +1,3 @@
-package de.othr.vs.quizarena.core;
-
-import de.othr.vs.quizarena.model.Question;
-
 import java.util.List;
 
 public class QuestionBank {

@@ -1,4 +1,4 @@
-package de.othr.vs.quizarena.model;
+ 
 
 public class PlayerSession {
     private final String username;

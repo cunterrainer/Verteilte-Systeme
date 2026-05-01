@@ -1,9 +1,3 @@
-package de.othr.vs.quizarena.net;
-
-import de.othr.vs.quizarena.core.QuizRoom;
-import de.othr.vs.quizarena.core.QuizServerState;
-import de.othr.vs.quizarena.model.Question;
-
 public class RoomGameLoop implements Runnable {
     private final QuizRoom room;
     private final QuizServerState state;

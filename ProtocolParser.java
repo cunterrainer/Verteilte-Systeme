@@ -1,5 +1,3 @@
-package de.othr.vs.quizarena.net;
-
 import java.util.Locale;
 
 public final class ProtocolParser {

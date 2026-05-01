@@ -1,8 +1,3 @@
-package de.othr.vs.quizarena.net;
-
-import de.othr.vs.quizarena.core.QuestionBank;
-import de.othr.vs.quizarena.core.QuizServerState;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;

@@ -1,8 +1,3 @@
-package de.othr.vs.quizarena.core;
-
-import de.othr.vs.quizarena.model.Question;
-import de.othr.vs.quizarena.net.ClientHandler;
-
 import java.util.*;
 
 public class QuizRoom {
