@@ -20,7 +20,7 @@ public class ClientHandler extends Thread {
     public void run() {
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+            out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
             send("OK: Welcome, use HELLO <username> to start or use HELP for more information.");
 
             String line;
@@ -298,6 +298,7 @@ public class ClientHandler extends Thread {
     public synchronized void send(String line) {
         if (out != null) {
             out.println(line);
+            out.flush();
         }
     }
 
