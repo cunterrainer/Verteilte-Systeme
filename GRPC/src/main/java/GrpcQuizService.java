@@ -25,14 +25,13 @@ import quiz.grpc.SubscribeRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GrpcQuizService extends QuizServiceGrpc.QuizServiceImplBase implements GameEventPublisher {
     private final QuizServerState state;
     private final int roundSeconds;
 
-    private final Map<String, CopyOnWriteArrayList<ServerCallStreamObserver<RoomEvent>>> roomSubscribers = new ConcurrentHashMap<>();
-    private final Map<String, CopyOnWriteArrayList<ServerCallStreamObserver<GameEvent>>> gameSubscribers = new ConcurrentHashMap<>();
+    private final Map<String, ServerCallStreamObserver<RoomEvent>> roomSubscribers = new ConcurrentHashMap<>();
+    private final Map<String, ServerCallStreamObserver<GameEvent>> gameSubscribers = new ConcurrentHashMap<>();
 
     public GrpcQuizService(QuizServerState state, int roundSeconds) {
         this.state = state;
@@ -437,40 +436,38 @@ public class GrpcQuizService extends QuizServiceGrpc.QuizServiceImplBase impleme
 
     private void sendRoomEvent(List<String> users, RoomEvent event) {
         for (String username : users) {
-            CopyOnWriteArrayList<ServerCallStreamObserver<RoomEvent>> observers = roomSubscribers.get(username);
-            if (observers == null) {
+            ServerCallStreamObserver<RoomEvent> observer = roomSubscribers.get(username);
+            if (observer == null) {
                 continue;
             }
-            for (ServerCallStreamObserver<RoomEvent> observer : observers) {
-                if (observer.isCancelled()) {
-                    observers.remove(observer);
-                    continue;
-                }
-                try {
-                    observer.onNext(event);
-                } catch (Exception exception) {
-                    observers.remove(observer);
-                }
+
+            if (observer.isCancelled()) {
+                roomSubscribers.remove(username, observer);
+                continue;
+            }
+            try {
+                observer.onNext(event);
+            } catch (Exception exception) {
+                roomSubscribers.remove(username, observer);
             }
         }
     }
 
     private void sendGameEvent(List<String> users, GameEvent event) {
         for (String username : users) {
-            CopyOnWriteArrayList<ServerCallStreamObserver<GameEvent>> observers = gameSubscribers.get(username);
-            if (observers == null) {
+            ServerCallStreamObserver<GameEvent> observer = gameSubscribers.get(username);
+            if (observer == null) {
                 continue;
             }
-            for (ServerCallStreamObserver<GameEvent> observer : observers) {
-                if (observer.isCancelled()) {
-                    observers.remove(observer);
-                    continue;
-                }
-                try {
-                    observer.onNext(event);
-                } catch (Exception exception) {
-                    observers.remove(observer);
-                }
+
+            if (observer.isCancelled()) {
+                gameSubscribers.remove(username, observer);
+                continue;
+            }
+            try {
+                observer.onNext(event);
+            } catch (Exception exception) {
+                gameSubscribers.remove(username, observer);
             }
         }
     }
@@ -499,17 +496,10 @@ public class GrpcQuizService extends QuizServiceGrpc.QuizServiceImplBase impleme
     private static <T> void registerSubscription(
             String username,
             ServerCallStreamObserver<T> observer,
-            Map<String, CopyOnWriteArrayList<ServerCallStreamObserver<T>>> target) {
-        target.computeIfAbsent(username, unused -> new CopyOnWriteArrayList<>()).add(observer);
+            Map<String, ServerCallStreamObserver<T>> target) {
+        target.put(username, observer);
         observer.setOnCancelHandler(() -> {
-            CopyOnWriteArrayList<ServerCallStreamObserver<T>> observers = target.get(username);
-            if (observers == null) {
-                return;
-            }
-            observers.remove(observer);
-            if (observers.isEmpty()) {
-                target.remove(username);
-            }
+            target.remove(username, observer);
         });
     }
 }
