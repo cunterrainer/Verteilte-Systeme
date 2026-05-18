@@ -2,11 +2,13 @@ public class RoomGameLoop implements Runnable {
     private final QuizRoom room;
     private final QuizServerState state;
     private final int roundSeconds;
+    private final GameEventPublisher publisher;
 
-    public RoomGameLoop(QuizRoom room, QuizServerState state, int roundSeconds) {
+    public RoomGameLoop(QuizRoom room, QuizServerState state, int roundSeconds, GameEventPublisher publisher) {
         this.room = room;
         this.state = state;
         this.roundSeconds = roundSeconds;
+        this.publisher = publisher;
     }
 
     @Override
@@ -14,8 +16,10 @@ public class RoomGameLoop implements Runnable {
         try {
             while (room.isGameStarted()) {
                 if (room.getPlayerCount() < 2) {
-                    room.broadcast("GAME_OVER: Not enough players to continue.");
+                    publisher.publishGameOver(room.getRoomId(), "Not enough players to continue.",
+                            room.formatScoreboard());
                     room.abortGame();
+                    publisher.publishRoomClosed(room.getRoomId());
                     state.closeRoomAfterGame(room);
                     return;
                 }
@@ -23,15 +27,12 @@ public class RoomGameLoop implements Runnable {
                 Question question = room.openCurrentRound();
                 if (question == null) {
                     room.abortGame();
+                    publisher.publishRoomClosed(room.getRoomId());
                     state.closeRoomAfterGame(room);
                     return;
                 }
 
-                room.broadcast(
-                        "ROUND_START: " + room.getCurrentRoundNumber() + " | Question: " + question.getText()
-                                + " | A=" + question.getOptionA()
-                                + " | B=" + question.getOptionB() + " | C=" + question.getOptionC()
-                                + " | D=" + question.getOptionD() + " | Time: " + roundSeconds + "s");
+                publisher.publishRoundStart(room, question, room.getCurrentRoundNumber(), roundSeconds);
 
                 long deadline = System.currentTimeMillis() + roundSeconds * 1000L;
                 while (System.currentTimeMillis() < deadline) {
@@ -46,22 +47,23 @@ public class RoomGameLoop implements Runnable {
 
                 QuizRoom.RoundOutcome outcome = room.closeRoundAndScore();
                 if (outcome != null) {
-                    room.broadcast("ROUND_RESULT: " + outcome.getCorrectOption() + " | First Correct: "
-                            + outcome.getFirstCorrectUser() + " | Explanation: " + outcome.getExplanation());
-                    room.broadcast("SCOREBOARD: " + outcome.getScoreboard());
+                    publisher.publishRoundResult(room.getRoomId(), outcome);
+                    publisher.publishScoreboard(room.getRoomId(), outcome.getScoreboard());
                 }
 
                 if (!room.moveToNextQuestion()) {
-                    room.broadcast("GAME_OVER: " + room.formatScoreboard());
+                    publisher.publishGameOver(room.getRoomId(), "Game finished.", room.formatScoreboard());
                     room.abortGame();
+                    publisher.publishRoomClosed(room.getRoomId());
                     state.closeRoomAfterGame(room);
                     return;
                 }
             }
         } catch (InterruptedException interruptedException) {
             Thread.currentThread().interrupt();
-            room.broadcast("ERR: GAME_LOOP_INTERRUPTED");
+            publisher.publishError(room.getRoomId(), "GAME_LOOP_INTERRUPTED");
             room.abortGame();
+            publisher.publishRoomClosed(room.getRoomId());
             state.closeRoomAfterGame(room);
         }
     }

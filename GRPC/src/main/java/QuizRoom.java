@@ -52,7 +52,7 @@ public class QuizRoom {
     private final String roomId;
     private final String roomName;
     private final List<Question> questions;
-    private final LinkedHashMap<String, ClientHandler> players = new LinkedHashMap<>();
+    private final LinkedHashSet<String> players = new LinkedHashSet<>();
     private final Map<String, Integer> scores = new HashMap<>();
     private final Set<String> readyUsers = new HashSet<>();
 
@@ -75,11 +75,11 @@ public class QuizRoom {
         return roomName;
     }
 
-    public synchronized boolean addPlayer(String username, ClientHandler handler) {
-        if (gameStarted || players.containsKey(username)) {
+    public synchronized boolean addPlayer(String username) {
+        if (gameStarted || players.contains(username)) {
             return false;
         }
-        players.put(username, handler);
+        players.add(username);
         readyUsers.remove(username);
         scores.putIfAbsent(username, 0);
         return true;
@@ -97,7 +97,7 @@ public class QuizRoom {
     }
 
     public synchronized boolean markReady(String username) {
-        if (!players.containsKey(username) || gameStarted) {
+        if (!players.contains(username) || gameStarted) {
             return false;
         }
         readyUsers.add(username);
@@ -149,7 +149,7 @@ public class QuizRoom {
     }
 
     public synchronized SubmitStatus submitAnswer(String username, String option) {
-        if (!players.containsKey(username)) {
+        if (!players.contains(username)) {
             return SubmitStatus.NOT_IN_ROOM;
         }
         if (!roundOpen) {
@@ -245,17 +245,11 @@ public class QuizRoom {
         return sb.toString();
     }
 
-    public synchronized void broadcast(String line) {
-        for (ClientHandler handler : players.values()) {
-            handler.send(line);
-        }
-    }
-
-    public synchronized List<ClientHandler> playerHandlersSnapshot() {
-        return new ArrayList<>(players.values());
-    }
-
     public synchronized boolean hasPlayer(String username) {
-        return players.containsKey(username);
+        return players.contains(username);
+    }
+
+    public synchronized List<String> playerUsernamesSnapshot() {
+        return new ArrayList<>(players);
     }
 }
