@@ -26,18 +26,14 @@ public class QuizClient {
     }
 
     public static void main(String[] args) {
-        ParsedArgs parsedArgs = parseArgs(args);
-        if (parsedArgs == null) {
+        String baseUrl = parseArgs(args);
+        if (baseUrl == null) {
             return;
         }
 
-        QuizClient client = new QuizClient(parsedArgs.baseUrl);
+        QuizClient client = new QuizClient(baseUrl);
         try {
-            if (parsedArgs.command == null || "interactive".equals(parsedArgs.command)) {
-                client.runInteractiveLoop();
-            } else {
-                client.execute(parsedArgs.command, parsedArgs.commandArgs);
-            }
+            client.runInteractiveLoop();
         } catch (Exception e) {
             System.err.println("Client error: " + e.getMessage());
         }
@@ -316,24 +312,13 @@ public class QuizClient {
         }
     }
 
-    private static ParsedArgs parseArgs(String[] args) {
+    private static String parseArgs(String[] args) {
         String baseUrl = DEFAULT_BASE_URL;
-        int start = 0;
         if (args.length >= 2 && "--base-url".equals(args[0])) {
             baseUrl = args[1];
-            start = 2;
         }
 
-        if (start >= args.length) {
-            return new ParsedArgs(baseUrl, null, new String[0]);
-        }
-
-        String command = args[start];
-        String[] commandArgs = new String[args.length - start - 1];
-        if (commandArgs.length > 0) {
-            System.arraycopy(args, start + 1, commandArgs, 0, commandArgs.length);
-        }
-        return new ParsedArgs(baseUrl, command, commandArgs);
+        return baseUrl;
     }
 
     private static void printHelp() {
@@ -354,18 +339,6 @@ public class QuizClient {
         System.out.println("  exit / quit (interactive mode)");
         System.out.println();
         System.out.println("Default base URL: " + DEFAULT_BASE_URL);
-    }
-
-    private static class ParsedArgs {
-        private final String baseUrl;
-        private final String command;
-        private final String[] commandArgs;
-
-        private ParsedArgs(String baseUrl, String command, String[] commandArgs) {
-            this.baseUrl = baseUrl;
-            this.command = command;
-            this.commandArgs = commandArgs;
-        }
     }
 
     private static class SimpleResponse {
