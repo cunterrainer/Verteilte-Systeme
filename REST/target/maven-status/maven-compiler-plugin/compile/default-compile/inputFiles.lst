@@ -1,0 +1,12 @@
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/entity/SubmitAnswerResponse.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/Main.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/entity/QuizQuestion.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/entity/QuestionView.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/service/ScoreResource.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/client/QuizClient.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/entity/ScoreResponse.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/entity/SubmitAnswerRequest.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/entity/AnswerRecord.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/service/AnswersResource.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/service/QuestionsResource.java
+/home/cunterraine/Dist/rpc/Verteilte-Systeme/REST/src/main/java/de/othr/vs/store/QuizStore.java

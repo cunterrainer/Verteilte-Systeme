@@ -1,0 +1,13 @@
+.mvn
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.kotlin
+
+*.pptx
+.idea
+
+.vscode/
+
+.DS_Store
